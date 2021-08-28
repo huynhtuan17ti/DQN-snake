@@ -1,2 +1,2 @@
-# DQN-snake
-Playing snake game with AI using Deep Q network
+# Deep Q Snake 
+AI snake game using Deep Q Network
