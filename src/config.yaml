@@ -1,5 +1,14 @@
 # hyparameters for Deep-Q learning
 
+n_actions: 3 # [straight, right, left]
+eps_start: 0.9
+eps_end: 0.01
+eps_decay: 500
+
+device: 'cpu'
+input_size: 11
+output_size: 3 # [straight, right, left]
+
 max_memory: 100000
 batch_size: 1000
 lr: 0.001

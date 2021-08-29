@@ -1,5 +1,6 @@
 from torch import nn 
 from torch.nn import functional as F
+import torch.autograd as autograd
 import os
 import torch
 
@@ -13,33 +14,38 @@ def save_model(state_dict, file_name: str) -> None:
 
 
 class DuelingDQN(nn.Module):
-    def __init__(self, output_size: int):
-        super().__init__()
-        self.conv1 = nn.Conv2d(4, 32, kernel_size = 8, stride = 4)
-        self.conv2 = nn.Conv2d(32, 64, kernel_size = 4, stride = 2)
-        self.conv3 = nn.Conv2d(64, 64, kernel_size = 3, stride = 1)
 
-        self.fc_adv1 = nn.Linear(3136, 512)
-        self.fc_adv2 = nn.Linear(512, output_size)
+    def __init__(self, input_dim, output_dim):
+        super(DuelingDQN, self).__init__()
+        self.input_dim = input_dim
+        self.output_dim = output_dim
+        
+        self.feauture_layer = nn.Sequential(
+            nn.Linear(self.input_dim, 128),
+            nn.ReLU(),
+            nn.Linear(128, 128),
+            nn.ReLU()
+        )
 
-        self.fc_val1 = nn.Linear(3136, 512)
-        self.fc_val2 = nn.Linear(512, 1)
+        self.value_stream = nn.Sequential(
+            nn.Linear(128, 128),
+            nn.ReLU(),
+            nn.Linear(128, 1)
+        )
 
-    def forward(self, x):
-        x = F.relu(self.conv1(x))
-        x = F.relu(self.conv2(x))
-        x = F.relu(self.conv3(x))
-        x = x.view(x.size(0), -1)
+        self.advantage_stream = nn.Sequential(
+            nn.Linear(128, 128),
+            nn.ReLU(),
+            nn.Linear(128, self.output_dim)
+        )
 
-        # value fc layer
-        val = F.relu(self.fc_val1(x))
-        val = self.fc_val2(val)
-
-        # advantage fc layer
-        adv = F.relu(self.fc_adv1(x))
-        adv = self.fc_adv2(adv)
-
-        return val + adv - adv.mean()
+    def forward(self, state):
+        features = self.feauture_layer(state)
+        values = self.value_stream(features)
+        advantages = self.advantage_stream(features)
+        qvals = values + (advantages - advantages.mean())
+        
+        return qvals
 
     def save(self, file_name: str = 'model.pth'):
         save_model(self.state_dict(), file_name)
