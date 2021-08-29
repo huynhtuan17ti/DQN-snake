@@ -1,8 +1,32 @@
 from game.machine import SnakeGameAI, Direction, Point
 import numpy as np
 import torch
+import torchvision.transforms as T
+from PIL import Image
+import pygame
+import cv2
 
-def calc_state(game: SnakeGameAI) -> np.ndarray:
+cnt = 0
+
+def calc_state(game: SnakeGameAI):
+    global cnt
+    screen = game.get_screen()
+    normalize = T.Compose(
+        [
+            T.ToPILImage(),
+            T.Grayscale(1),
+            T.Resize(84, interpolation=Image.BILINEAR),
+        ]
+    )
+    screen = np.rot90(pygame.surfarray.array3d(screen))[::-1]
+    cv2.imwrite('img/img{}.png'.format(cnt), screen)
+    cnt += 1
+
+    screen = np.array(normalize(screen), dtype=np.float32) / 255.0
+    state = np.stack([screen.astype(np.float32) for _ in range(1)], axis=0)
+    return state
+
+def calc_state_v1(game: SnakeGameAI) -> np.ndarray:
     '''
         calculate current state of the game base on the snake's position
         state = [danger_straight, danger_right, danger_left] + [Move direction (one-hot encoding)] + [Food location (base on snake)]

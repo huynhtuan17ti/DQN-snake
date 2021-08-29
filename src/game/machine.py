@@ -27,7 +27,7 @@ SPEED = 40
 
 class SnakeGameAI:
 
-    def __init__(self, w=640, h=480):
+    def __init__(self, w=480, h=480):
         self.w = w
         self.h = h
         # init display
@@ -107,6 +107,9 @@ class SnakeGameAI:
 
         return False
 
+    def get_screen(self):
+        screen = self.display
+        return screen
 
     def _update_ui(self):
         self.display.fill(BLACK)

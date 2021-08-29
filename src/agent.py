@@ -40,7 +40,8 @@ class Agent:
         rd = np.random.random()
         if rd > eps_threshold:
             with torch.no_grad():
-                qvals = self.trainer.model.forward(torch.tensor(state, dtype = torch.float))
+                torch_state = torch.tensor(state, dtype = torch.float).unsqueeze(0)
+                qvals = self.trainer.model.forward(torch_state)
                 move = np.argmax(qvals.cpu().detach().numpy())
                 action[move] = 1
         else:

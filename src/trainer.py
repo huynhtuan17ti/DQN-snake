@@ -10,7 +10,7 @@ class Trainer:
         self.lr = cfg['lr']
         self.gamma = cfg['gamma']
         self.device = get_device(cfg['device'])
-        self.model = LinearQN(cfg['input_size'], cfg['output_size']).to(self.device)
+        self.model = DuelingDQN(cfg['input_size'], cfg['output_size']).to(self.device)
         self.optimizer = Adam(self.model.parameters(), lr = self.lr)
         self.criterion = nn.MSELoss()
 
@@ -24,7 +24,7 @@ class Trainer:
         actions = torch.tensor(actions, dtype = torch.long).to(self.device)
         rewards = torch.tensor(rewards, dtype = torch.float).to(self.device)
 
-        if len(states.shape) == 1:
+        if len(actions.shape) == 1:
             states = torch.unsqueeze(states, 0)
             next_states = torch.unsqueeze(next_states, 0)
             actions = torch.unsqueeze(actions, 0)
@@ -37,7 +37,7 @@ class Trainer:
         for idx in range(len(dones)):
             nextQ = rewards[idx]
             if not dones[idx]:
-                nextQ = rewards[idx] + self.gamma * torch.max(self.model.forward(next_states[idx]))
+                nextQ = rewards[idx] + self.gamma * torch.max(self.model.forward(next_states[idx].unsqueeze(0)))
             targets[idx][torch.argmax(actions[idx]).item()] = nextQ
 
         loss = self.criterion(preds, targets)

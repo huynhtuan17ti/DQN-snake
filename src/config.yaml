@@ -6,7 +6,7 @@ eps_end: 0.01
 eps_decay: 500
 
 device: 'cpu'
-input_size: 11
+input_size: (84, 84)
 output_size: 3 # [straight, right, left]
 
 max_memory: 100000
