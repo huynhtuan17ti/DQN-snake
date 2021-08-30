@@ -51,13 +51,13 @@ class DuelingDQN(nn.Module):
 class LinearQN(nn.Module):
     def __init__(self, input_size: int, output_size: int):
         super().__init__()
-        self.linear1 = nn.Linear(input_size, 32)
-        self.linear2 = nn.Linear(input_size, 32)
-        self.linear3 = nn.Linear(32, output_size)
+        self.linear1 = nn.Linear(input_size, 256)
+        # self.linear2 = nn.Linear(256, 256)
+        self.linear3 = nn.Linear(256, output_size)
 
     def forward(self, x):
         x = F.relu(self.linear1(x))
-        x = F.relu(self.linear2(x))
+        # x = F.relu(self.linear2(x))
         x = self.linear3(x)
         return x
 

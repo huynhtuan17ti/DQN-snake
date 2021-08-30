@@ -10,8 +10,8 @@ class Trainer:
         self.lr = cfg['lr']
         self.gamma = cfg['gamma']
         self.device = get_device(cfg['device'])
-        self.policy_net = DuelingDQN(cfg['DQN']['input_size'], cfg['DQN']['output_size']).to(self.device)
-        self.target_net = DuelingDQN(cfg['DQN']['input_size'], cfg['DQN']['output_size']).to(self.device)
+        self.policy_net = LinearQN(cfg['DQN']['input_size'], cfg['DQN']['output_size']).to(self.device)
+        self.target_net = LinearQN(cfg['DQN']['input_size'], cfg['DQN']['output_size']).to(self.device)
         self.target_net.eval()
         self.optimizer = Adam(self.policy_net.parameters(), lr = self.lr)
         self.criterion = nn.MSELoss()

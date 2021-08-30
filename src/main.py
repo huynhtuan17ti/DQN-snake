@@ -3,7 +3,7 @@ from agent import Agent
 from game.machine import SnakeGameAI
 from typing import Dict
 from utils import plot
-from utils import calc_cur_state, calc_next_state
+from utils import calc_cur_state
 import yaml
 
 class Run:
