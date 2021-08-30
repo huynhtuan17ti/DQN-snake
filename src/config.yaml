@@ -1,16 +1,26 @@
 # hyparameters for Deep-Q learning
-
-n_actions: 3 # [straight, right, left]
-eps_start: 0.9
-eps_end: 0.01
-eps_decay: 500
-
 device: 'cpu'
-input_size: (84, 84)
-output_size: 3 # [straight, right, left]
+n_actions: 3 # [straight, right, left]
 
+e_greedy:
+  eps_start: 0.9
+  eps_end: 0.01
+  eps_decay: 500
+
+reward:
+  alpha: -0.001
+  apple: 1
+  collision: -10
+
+DQN:
+  input_size: (4, 84, 84)
+  resize_size: 84
+  num_channel: 4
+  output_size: 3 # [straight, right, left]
+
+target_update_step: 100
 max_memory: 100000
-batch_size: 1000
+batch_size: 128
 lr: 0.001
 gamma: 0.9
 num_iters: 100000

@@ -27,7 +27,8 @@ SPEED = 40
 
 class SnakeGameAI:
 
-    def __init__(self, w=480, h=480):
+    def __init__(self, cfg, w=480, h=480):
+        self.cfg = cfg
         self.w = w
         self.h = h
         # init display
@@ -77,15 +78,16 @@ class SnakeGameAI:
         game_over = False
         if self.is_collision() or self.frame_iteration > 100*len(self.snake):
             game_over = True
-            reward = -10
+            reward += self.cfg['reward']['collision']
             return reward, game_over, self.score
 
         # 4. place new food or just move
         if self.head == self.food:
             self.score += 1
-            reward = 10
+            reward += self.cfg['reward']['apple']
             self._place_food()
         else:
+            reward += self.cfg['reward']['alpha']
             self.snake.pop()
         
         # 5. update ui and clock

@@ -3,7 +3,7 @@ import numpy as np
 import random
 import torch
 from trainer import Trainer
-from utils import calc_state
+
 from typing import Dict
 
 class Agent:
@@ -12,9 +12,6 @@ class Agent:
         self.n_games = 0
         self.memory = deque(maxlen=cfg['max_memory'])
         self.trainer = Trainer(cfg)
-
-    def get_state(self, game):
-        return calc_state(game)
 
     def save_memory(self, state, action, reward, next_state, done):
         self.memory.append((state, action, reward, next_state, done))
@@ -33,15 +30,15 @@ class Agent:
 
     def get_action(self, state):
         # eps_ed + (eps_st - eps_ed)*e^(-1.0 * n_games/decay)
-        eps_threshold = self.cfg['eps_end'] + (self.cfg['eps_start'] - self.cfg['eps_end']) \
-                        * np.exp(-1.0 * self.n_games / self.cfg['eps_decay'])
+        eps_threshold = self.cfg['e_greedy']['eps_end'] + (self.cfg['e_greedy']['eps_start'] - self.cfg['e_greedy']['eps_end']) \
+                        * np.exp(-1.0 * self.n_games / self.cfg['e_greedy']['eps_decay'])
         
         action = [0, 0, 0]
         rd = np.random.random()
         if rd > eps_threshold:
             with torch.no_grad():
                 torch_state = torch.tensor(state, dtype = torch.float).unsqueeze(0)
-                qvals = self.trainer.model.forward(torch_state)
+                qvals = self.trainer.policy_net.forward(torch_state)
                 move = np.argmax(qvals.cpu().detach().numpy())
                 action[move] = 1
         else:

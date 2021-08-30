@@ -1,33 +1,33 @@
-from numpy import nested_iters
+import numpy as np
 from agent import Agent
 from game.machine import SnakeGameAI
 from typing import Dict
 from utils import plot
+from utils import calc_cur_state, calc_next_state
 import yaml
 
 class Run:
     def __init__(self, cfg: Dict) -> None:
         self.agent = Agent(cfg)
-        self.game = SnakeGameAI()
-        self.n_iters = cfg['num_iters']
+        self.game = SnakeGameAI(cfg)
         self.best_score = 0
-
+        self.cfg = cfg
     
     def train(self):
         plot_scores = []
         plot_mean_scores = []
         total_score = 0
 
-        for iter in range(self.n_iters):
+        while True:
             # get current state
-            state = self.agent.get_state(self.game)
+            state = calc_cur_state(self.cfg, self.game)
 
             # get action
             action = self.agent.get_action(state)
 
             # apply action and get new state
             reward, done, score = self.game.play_step(action)
-            new_state = self.agent.get_state(self.game)
+            new_state = calc_next_state(self.cfg, state, self.game)
 
             # train short memory
             self.agent.train_short_memory(state, action, reward, new_state, done)
@@ -43,7 +43,10 @@ class Run:
 
                 if score > self.best_score:
                     self.best_score = score
-                    self.agent.trainer.model.save()
+                    self.agent.trainer.policy_net.save()
+
+                if self.agent.n_games % self.cfg['target_update_step']:
+                    self.agent.trainer.save_target_net()
 
                 print('Game:', self.agent.n_games, 'Score:', score, 'Best:', self.best_score)
 

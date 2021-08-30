@@ -10,10 +10,14 @@ class Trainer:
         self.lr = cfg['lr']
         self.gamma = cfg['gamma']
         self.device = get_device(cfg['device'])
-        self.model = DuelingDQN(cfg['input_size'], cfg['output_size']).to(self.device)
-        self.optimizer = Adam(self.model.parameters(), lr = self.lr)
+        self.policy_net = DuelingDQN(cfg['DQN']['input_size'], cfg['DQN']['output_size']).to(self.device)
+        self.target_net = DuelingDQN(cfg['DQN']['input_size'], cfg['DQN']['output_size']).to(self.device)
+        self.target_net.eval()
+        self.optimizer = Adam(self.policy_net.parameters(), lr = self.lr)
         self.criterion = nn.MSELoss()
 
+    def save_target_net(self):
+        self.target_net.load_state_dict(self.policy_net.state_dict())
 
     def compute_loss(self, batch):
         states, actions, rewards, next_states, dones = batch
@@ -31,13 +35,13 @@ class Trainer:
             rewards = torch.unsqueeze(rewards, 0)
             dones = (dones, )
 
-        preds = self.model.forward(states)
+        preds = self.policy_net.forward(states)
         targets = preds.clone()
 
         for idx in range(len(dones)):
             nextQ = rewards[idx]
             if not dones[idx]:
-                nextQ = rewards[idx] + self.gamma * torch.max(self.model.forward(next_states[idx].unsqueeze(0)))
+                nextQ = rewards[idx] + self.gamma * torch.max(self.target_net.forward(next_states[idx].unsqueeze(0)))
             targets[idx][torch.argmax(actions[idx]).item()] = nextQ
 
         loss = self.criterion(preds, targets)
