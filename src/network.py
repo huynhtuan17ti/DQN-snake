@@ -20,7 +20,7 @@ class DuelingDQN(nn.Module):
         self.input_dim = input_dim
         self.output_dim = output_dim
         
-        self.conv1 = nn.Conv2d(4, 32, kernel_size=8, stride=4)
+        self.conv1 = nn.Conv2d(input_dim[0], 32, kernel_size=8, stride=4)
         self.conv2 = nn.Conv2d(32, 64, kernel_size=4, stride=2)
         self.conv3 = nn.Conv2d(64, 64, kernel_size=3, stride=1)
 
@@ -51,12 +51,14 @@ class DuelingDQN(nn.Module):
 class LinearQN(nn.Module):
     def __init__(self, input_size: int, output_size: int):
         super().__init__()
-        self.linear1 = nn.Linear(input_size, 256)
-        self.linear2 = nn.Linear(256, output_size)
+        self.linear1 = nn.Linear(input_size, 32)
+        self.linear2 = nn.Linear(input_size, 32)
+        self.linear3 = nn.Linear(32, output_size)
 
     def forward(self, x):
         x = F.relu(self.linear1(x))
-        x = self.linear2(x)
+        x = F.relu(self.linear2(x))
+        x = self.linear3(x)
         return x
 
     def save(self, file_name: str = 'model.pth'):

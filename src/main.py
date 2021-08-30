@@ -27,8 +27,7 @@ class Run:
 
             # apply action and get new state
             reward, done, score = self.game.play_step(action)
-            new_state = calc_next_state(self.cfg, state, self.game)
-
+            new_state = calc_cur_state(self.cfg, self.game)
             # train short memory
             self.agent.train_short_memory(state, action, reward, new_state, done)
 
@@ -45,7 +44,8 @@ class Run:
                     self.best_score = score
                     self.agent.trainer.policy_net.save()
 
-                if self.agent.n_games % self.cfg['target_update_step']:
+                if self.agent.n_games % self.cfg['target_update_step'] == 0:
+                    print('Update target net!')
                     self.agent.trainer.save_target_net()
 
                 print('Game:', self.agent.n_games, 'Score:', score, 'Best:', self.best_score)

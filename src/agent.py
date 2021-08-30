@@ -3,7 +3,7 @@ import numpy as np
 import random
 import torch
 from trainer import Trainer
-
+from utils import get_device
 from typing import Dict
 
 class Agent:
@@ -12,6 +12,7 @@ class Agent:
         self.n_games = 0
         self.memory = deque(maxlen=cfg['max_memory'])
         self.trainer = Trainer(cfg)
+        self.device = get_device(cfg['device'])
 
     def save_memory(self, state, action, reward, next_state, done):
         self.memory.append((state, action, reward, next_state, done))
@@ -37,7 +38,7 @@ class Agent:
         rd = np.random.random()
         if rd > eps_threshold:
             with torch.no_grad():
-                torch_state = torch.tensor(state, dtype = torch.float).unsqueeze(0)
+                torch_state = torch.tensor(state, dtype = torch.float).unsqueeze(0).to(self.device)
                 qvals = self.trainer.policy_net.forward(torch_state)
                 move = np.argmax(qvals.cpu().detach().numpy())
                 action[move] = 1

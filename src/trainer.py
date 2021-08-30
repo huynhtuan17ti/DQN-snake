@@ -35,13 +35,13 @@ class Trainer:
             rewards = torch.unsqueeze(rewards, 0)
             dones = (dones, )
 
-        preds = self.policy_net.forward(states)
+        preds = self.policy_net(states)
         targets = preds.clone()
 
         for idx in range(len(dones)):
             nextQ = rewards[idx]
             if not dones[idx]:
-                nextQ = rewards[idx] + self.gamma * torch.max(self.target_net.forward(next_states[idx].unsqueeze(0)))
+                nextQ = rewards[idx] + self.gamma * torch.max(self.target_net(next_states[idx].unsqueeze(0)))
             targets[idx][torch.argmax(actions[idx]).item()] = nextQ
 
         loss = self.criterion(preds, targets)
