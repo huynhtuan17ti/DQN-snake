@@ -89,32 +89,6 @@ def calc_cur_state(cfg: Dict, game: SnakeGameAI) -> np.ndarray:
         dir_u,
         dir_d,
 
-        # dist wall
-        dist_wall(Direction.LEFT, point_l, game),
-        dist_wall(Direction.RIGHT, point_r, game),
-        dist_wall(Direction.UP, point_u, game),
-        dist_wall(Direction.DOWN, point_d, game),
-
-        # dist apple
-        dist_apple(Direction.LEFT, point_l, game),
-        dist_apple(Direction.RIGHT, point_r, game),
-        dist_apple(Direction.UP, point_u, game),
-        dist_apple(Direction.DOWN, point_d, game),
-
-        # dist itself
-        dist_itself(Direction.LEFT, point_l, game),
-        dist_itself(Direction.RIGHT, point_r, game),
-        dist_itself(Direction.UP, point_u, game),
-        dist_itself(Direction.DOWN, point_d, game),
-    ]
-
-    state = [
-        # move direction
-        dir_l,
-        dir_r,
-        dir_u,
-        dir_d,
-
         # Danger straight
         (dir_r and game.is_collision(point_r)) or 
         (dir_l and game.is_collision(point_l)) or 

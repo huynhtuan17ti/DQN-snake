@@ -42,7 +42,7 @@ class DuelingDQN(nn.Module):
 
     def forward(self, x):
         features = self.feauture_layer(x)
-        
+
         values = self.value_stream(features)
         advantages = self.advantage_stream(features)
         qvals = values + (advantages - advantages.mean())
@@ -58,7 +58,7 @@ class LinearQN(nn.Module):
         super().__init__()
         self.linear1 = nn.Linear(input_size, 32)
         self.linear2 = nn.Linear(32, 64)
-        self.linear3 = nn.Linear(63, 32)
+        self.linear3 = nn.Linear(64, 32)
         self.linear4 = nn.Linear(32, output_size)
 
     def forward(self, x):

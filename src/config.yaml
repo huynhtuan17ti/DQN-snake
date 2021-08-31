@@ -22,7 +22,7 @@ reward:
 
 DQN:
   pretrained: False #'saved_model/model_old_state.pth'
-  DDQN: True
+  DDQN: False
   input_size: 11
   output_size: 3
 
