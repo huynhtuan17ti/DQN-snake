@@ -48,6 +48,10 @@ class Run:
                     print('Update target net!')
                     self.agent.trainer.save_target_net()
 
+                if self.agent.n_games % self.cfg['lr_update_step'] == 0:
+                    print('Update the lr!')
+                    self.agent.trainer.update_lr()
+
                 print('Game:', self.agent.n_games, 'Score:', score, 'Best:', self.best_score)
 
                 plot_scores.append(score)

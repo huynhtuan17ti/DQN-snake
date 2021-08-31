@@ -1,6 +1,14 @@
 # hyparameters for Deep-Q learning
 device: 'cpu'
+
 n_actions: 3 # [straight, right, left]
+target_update_step: 20
+max_memory: 100000
+batch_size: 1000
+lr: 0.001
+gamma: 0.9
+lamda: 0.1
+lr_update_step: 500
 
 e_greedy:
   eps_start: 0.9
@@ -13,12 +21,8 @@ reward:
   collision: -10
 
 DQN:
-  input_size: 16 # 4 + 4*3
-  output_size: 3 # [straight, right, left]
+  pretrained: False #'saved_model/model_old_state.pth'
+  DDQN: True
+  input_size: 11
+  output_size: 3
 
-target_update_step: 20
-max_memory: 100000
-batch_size: 1000
-lr: 0.001
-gamma: 0.9
-num_iters: 100000

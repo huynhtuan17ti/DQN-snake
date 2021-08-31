@@ -10,11 +10,27 @@ class Trainer:
         self.lr = cfg['lr']
         self.gamma = cfg['gamma']
         self.device = get_device(cfg['device'])
-        self.policy_net = LinearQN(cfg['DQN']['input_size'], cfg['DQN']['output_size']).to(self.device)
-        self.target_net = LinearQN(cfg['DQN']['input_size'], cfg['DQN']['output_size']).to(self.device)
+
+        if cfg['DQN']['DDQN']:
+            self.policy_net = DuelingDQN(cfg['DQN']['input_size'], cfg['DQN']['output_size']).to(self.device)
+            self.target_net = DuelingDQN(cfg['DQN']['input_size'], cfg['DQN']['output_size']).to(self.device)
+        else:
+            self.policy_net = LinearQN(cfg['DQN']['input_size'], cfg['DQN']['output_size']).to(self.device)
+            self.target_net = LinearQN(cfg['DQN']['input_size'], cfg['DQN']['output_size']).to(self.device)
         self.target_net.eval()
+        
+        if cfg['DQN']['pretrained']:
+            self.policy_net.load_state_dict(torch.load(cfg['pretrained']))
+            self.save_target_net()
+            print('Load pretrained model!')
+
         self.optimizer = Adam(self.policy_net.parameters(), lr = self.lr)
         self.criterion = nn.MSELoss()
+        self.cfg = cfg
+
+    def update_lr(self):
+        for g in self.optimizer.param_groups:
+            g['lr'] = g['lr'] * self.cfg['lamda']
 
     def save_target_net(self):
         self.target_net.load_state_dict(self.policy_net.state_dict())
@@ -43,7 +59,7 @@ class Trainer:
             if not dones[idx]:
                 nextQ = rewards[idx] + self.gamma * torch.max(self.target_net(next_states[idx].unsqueeze(0)))
             targets[idx][torch.argmax(actions[idx]).item()] = nextQ
-
+        
         loss = self.criterion(preds, targets)
         return loss
 

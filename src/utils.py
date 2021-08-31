@@ -9,20 +9,21 @@ def calc_dist(a: int, b: int, limit: int) -> float:
         calculate dist and normalize it
     '''
     if a - b < 0:
-        return limit # limit/limit
-    return (a - b)
+        return 1 # limit/limit
+    return (a - b)/limit
+
 
 def dist_wall(direction: Direction, pt: Point, game: SnakeGameAI) -> float:
-    if game.is_collision(pt):
+    if pt.x > game.w - BLOCK_SIZE or pt.x < 0 or pt.y > game.h - BLOCK_SIZE or pt.y < 0:
         return 0
     if direction == Direction.RIGHT:
-        return game.w - pt.x
+        return (game.w - pt.x)/game.w
     if direction == Direction.LEFT:
-        return pt.x
+        return pt.x/game.w
     if direction == Direction.UP:
-        return pt.y
+        return pt.y/game.h
     if direction == Direction.DOWN:
-        return game.h - pt.y
+        return (game.h - pt.y)/game.h
 
 
 def dist_apple(direction: Direction, pt: Point, game: SnakeGameAI) -> float:
@@ -30,37 +31,44 @@ def dist_apple(direction: Direction, pt: Point, game: SnakeGameAI) -> float:
         return 0
 
     if direction == Direction.RIGHT:
-        return calc_dist(game.food.x, pt.x, -1)
+        return calc_dist(game.food.x, pt.x, game.w)
     if direction == Direction.LEFT:
-        return calc_dist(pt.x, game.food.x, -1)
+        return calc_dist(pt.x, game.food.x, game.w)
     if direction == Direction.UP:
-        return calc_dist(pt.y, game.food.y, -1)
+        return calc_dist(pt.y, game.food.y, game.h)
     if direction == Direction.DOWN:
-        return calc_dist(game.food.y, pt.y, -1)
+        return calc_dist(game.food.y, pt.y, game.h)
 
 
-def dist_itself(direction: Direction, pt: Point, game: SnakeGameAI) -> float:
-    min_dist = 1
+def dist_itself(direction: Direction, pt: Point, game: SnakeGameAI) -> int:
     if direction == Direction.RIGHT:
+        min_dist = 1
         for p in game.snake:
             if p.y == pt.y and p != pt: 
                 min_dist = min(min_dist, calc_dist(p.x, pt.x, game.w))
+        return min_dist
 
     if direction == Direction.LEFT:
+        min_dist = 1
         for p in game.snake:
             if p.y == pt.y and p != pt: 
                 min_dist = min(min_dist, calc_dist(pt.x, p.x, game.w))
+        return min_dist
 
     if direction == Direction.UP:
+        min_dist = 1
         for p in game.snake:
             if p.x == pt.x and p != pt: 
                 min_dist = min(min_dist, calc_dist(pt.y, p.y, game.h))
+        return min_dist
 
     if direction == Direction.DOWN:
+        min_dist = 1
         for p in game.snake:
             if p.x == pt.x and p != pt: 
                 min_dist = min(min_dist, calc_dist(p.y, pt.y, game.h))
-    return min_dist
+        return min_dist
+
 
 def calc_cur_state(cfg: Dict, game: SnakeGameAI) -> np.ndarray:
     head = game.snake[0]
@@ -74,7 +82,6 @@ def calc_cur_state(cfg: Dict, game: SnakeGameAI) -> np.ndarray:
     dir_u = game.direction == Direction.UP
     dir_d = game.direction == Direction.DOWN
 
-    # [wall, apple, itself]
     state = [
         # move direction
         dir_l,
@@ -82,25 +89,55 @@ def calc_cur_state(cfg: Dict, game: SnakeGameAI) -> np.ndarray:
         dir_u,
         dir_d,
 
-        # Left direction
+        # dist wall
         dist_wall(Direction.LEFT, point_l, game),
-        dist_apple(Direction.LEFT, point_l, game),
-        dist_itself(Direction.LEFT, point_l, game),
-
-        # Right direction
         dist_wall(Direction.RIGHT, point_r, game),
-        dist_apple(Direction.RIGHT, point_r, game),
-        dist_itself(Direction.RIGHT, point_r, game),
-
-        # Up direction
         dist_wall(Direction.UP, point_u, game),
-        dist_apple(Direction.UP, point_u, game),
-        dist_itself(Direction.UP, point_u, game),
-
-        # Down direction
         dist_wall(Direction.DOWN, point_d, game),
+
+        # dist apple
+        dist_apple(Direction.LEFT, point_l, game),
+        dist_apple(Direction.RIGHT, point_r, game),
+        dist_apple(Direction.UP, point_u, game),
         dist_apple(Direction.DOWN, point_d, game),
+
+        # dist itself
+        dist_itself(Direction.LEFT, point_l, game),
+        dist_itself(Direction.RIGHT, point_r, game),
+        dist_itself(Direction.UP, point_u, game),
         dist_itself(Direction.DOWN, point_d, game),
+    ]
+
+    state = [
+        # move direction
+        dir_l,
+        dir_r,
+        dir_u,
+        dir_d,
+
+        # Danger straight
+        (dir_r and game.is_collision(point_r)) or 
+        (dir_l and game.is_collision(point_l)) or 
+        (dir_u and game.is_collision(point_u)) or 
+        (dir_d and game.is_collision(point_d)),
+
+        # Danger right
+        (dir_u and game.is_collision(point_r)) or 
+        (dir_d and game.is_collision(point_l)) or 
+        (dir_l and game.is_collision(point_u)) or 
+        (dir_r and game.is_collision(point_d)),
+
+        # Danger left
+        (dir_d and game.is_collision(point_r)) or 
+        (dir_u and game.is_collision(point_l)) or 
+        (dir_r and game.is_collision(point_u)) or 
+        (dir_l and game.is_collision(point_d)),
+
+        # Food location 
+        game.food.x < game.head.x,  # food left
+        game.food.x > game.head.x,  # food right
+        game.food.y < game.head.y,  # food up
+        game.food.y > game.head.y  # food down        
     ]
 
     return np.array(state, dtype=np.float32)

@@ -30,7 +30,7 @@ class Agent:
         self.trainer.train_step(mini_batch)
 
     def get_action(self, state):
-        # eps_ed + (eps_st - eps_ed)*e^(-1.0 * n_games/decay)
+        # using e-greedy
         eps_threshold = self.cfg['e_greedy']['eps_end'] + (self.cfg['e_greedy']['eps_start'] - self.cfg['e_greedy']['eps_end']) \
                         * np.exp(-1.0 * self.n_games / self.cfg['e_greedy']['eps_decay'])
         
@@ -39,7 +39,7 @@ class Agent:
         if rd > eps_threshold:
             with torch.no_grad():
                 torch_state = torch.tensor(state, dtype = torch.float).unsqueeze(0).to(self.device)
-                qvals = self.trainer.policy_net.forward(torch_state)
+                qvals = self.trainer.policy_net(torch_state)
                 move = np.argmax(qvals.cpu().detach().numpy())
                 action[move] = 1
         else:
