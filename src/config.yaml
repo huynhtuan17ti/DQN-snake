@@ -4,16 +4,17 @@ device: 'cpu'
 n_actions: 3 # [straight, right, left]
 target_update_step: 20
 max_memory: 100000
-batch_size: 1000
-lr: 0.001
+batch_size: 128
+lr: 0.00025
 gamma: 0.9
 lamda: 0.1
 lr_update_step: 500
+resize_size: 84
 
 e_greedy:
   eps_start: 0.9
   eps_end: 0.01
-  eps_decay: 100
+  eps_decay: 300
 
 reward:
   alpha: -1
@@ -23,6 +24,6 @@ reward:
 DQN:
   pretrained: False #'saved_model/model_old_state.pth'
   DDQN: False
-  input_size: 11
-  output_size: 3
+  input_dim: [4, 84, 84]
+  output_dim: 3
 

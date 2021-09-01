@@ -12,11 +12,11 @@ class Trainer:
         self.device = get_device(cfg['device'])
 
         if cfg['DQN']['DDQN']:
-            self.policy_net = DuelingDQN(cfg['DQN']['input_size'], cfg['DQN']['output_size']).to(self.device)
-            self.target_net = DuelingDQN(cfg['DQN']['input_size'], cfg['DQN']['output_size']).to(self.device)
+            self.policy_net = DuelingDQN(cfg['DQN']['input_dim'], cfg['DQN']['output_dim']).to(self.device)
+            self.target_net = DuelingDQN(cfg['DQN']['input_dim'], cfg['DQN']['output_dim']).to(self.device)
         else:
-            self.policy_net = LinearQN(cfg['DQN']['input_size'], cfg['DQN']['output_size']).to(self.device)
-            self.target_net = LinearQN(cfg['DQN']['input_size'], cfg['DQN']['output_size']).to(self.device)
+            self.policy_net = LinearQN(cfg['DQN']['input_dim'], cfg['DQN']['output_dim']).to(self.device)
+            self.target_net = LinearQN(cfg['DQN']['input_dim'], cfg['DQN']['output_dim']).to(self.device)
         self.target_net.eval()
         
         if cfg['DQN']['pretrained']:

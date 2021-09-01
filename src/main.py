@@ -3,7 +3,7 @@ from agent import Agent
 from game.machine import SnakeGameAI
 from typing import Dict
 from utils import plot
-from utils import calc_cur_state
+from utils import get_state, get_next_state
 import yaml
 
 class Run:
@@ -18,16 +18,20 @@ class Run:
         plot_mean_scores = []
         total_score = 0
 
+        # get begin state
+        state = get_state(self.cfg, self.game)
+
         while True:
             # get current state
-            state = calc_cur_state(self.cfg, self.game)
+            state = get_next_state(state, self.cfg, self.game)
 
             # get action
             action = self.agent.get_action(state)
 
             # apply action and get new state
             reward, done, score = self.game.play_step(action)
-            new_state = calc_cur_state(self.cfg, self.game)
+            new_state = get_next_state(state, self.cfg, self.game)
+
             # train short memory
             self.agent.train_short_memory(state, action, reward, new_state, done)
 

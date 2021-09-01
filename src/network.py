@@ -3,6 +3,7 @@ from torch.nn import functional as F
 import torch.autograd as autograd
 import os
 import torch
+from typing import Tuple
 
 def save_model(state_dict, file_name: str) -> None:
     model_folder_path = './saved_model'
@@ -54,18 +55,24 @@ class DuelingDQN(nn.Module):
     
 
 class LinearQN(nn.Module):
-    def __init__(self, input_size: int, output_size: int):
+    def __init__(self, input_dim: Tuple[int, int, int], output_dim: int):
         super().__init__()
-        self.linear1 = nn.Linear(input_size, 32)
-        self.linear2 = nn.Linear(32, 64)
-        self.linear3 = nn.Linear(64, 32)
-        self.linear4 = nn.Linear(32, output_size)
+        c, h, w = input_dim
+        self.online = nn.Sequential(
+            nn.Conv2d(in_channels=c, out_channels=32, kernel_size=8, stride=4),
+            nn.ReLU(),
+            nn.Conv2d(in_channels=32, out_channels=64, kernel_size=4, stride=2),
+            nn.ReLU(),
+            nn.Conv2d(in_channels=64, out_channels=64, kernel_size=3, stride=1),
+            nn.ReLU(),
+            nn.Flatten(),
+            nn.Linear(3136, 512),
+            nn.ReLU(),
+            nn.Linear(512, output_dim),
+        )
 
     def forward(self, x):
-        x = F.relu(self.linear1(x))
-        x = F.relu(self.linear2(x))
-        x = F.relu(self.linear3(x))
-        x = self.linear4(x)
+        x = self.online(x)
         return x
 
     def save(self, file_name: str = 'model.pth'):

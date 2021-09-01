@@ -1,121 +1,33 @@
+from torchvision.transforms.functional import normalize
 from game.machine import SnakeGameAI, Direction, Point, BLOCK_SIZE
 import numpy as np
 import torch
-import math
+import torchvision.transforms as T
+import pygame
 from typing import Dict
+from PIL import Image
+import cv2
 
-def calc_dist(a: int, b: int, limit: int) -> float:
-    '''
-        calculate dist and normalize it
-    '''
-    if a - b < 0:
-        return 1 # limit/limit
-    return (a - b)/limit
+def get_game_screen(cfg: Dict, game: SnakeGameAI) -> np.ndarray:
+    screen = game.get_screen()
+    normalize = T.Compose([
+        T.ToPILImage(),
+        T.Grayscale(1),
+        T.Resize(cfg['resize_size'], interpolation=Image.BILINEAR)
+    ])
+    screen = np.rot90(pygame.surfarray.array3d(screen))[::-1]
+    screen = normalize(screen)
+    return np.array(screen, dtype=np.float32) / 255.0
 
+def get_state(cfg: Dict, game: SnakeGameAI) -> np.ndarray:
+    screen = get_game_screen(cfg, game)
+    state = np.stack([screen.astype(np.float32) for _ in range(4)], axis=0)
+    return state
 
-def dist_wall(direction: Direction, pt: Point, game: SnakeGameAI) -> float:
-    if pt.x > game.w - BLOCK_SIZE or pt.x < 0 or pt.y > game.h - BLOCK_SIZE or pt.y < 0:
-        return 0
-    if direction == Direction.RIGHT:
-        return (game.w - pt.x)/game.w
-    if direction == Direction.LEFT:
-        return pt.x/game.w
-    if direction == Direction.UP:
-        return pt.y/game.h
-    if direction == Direction.DOWN:
-        return (game.h - pt.y)/game.h
-
-
-def dist_apple(direction: Direction, pt: Point, game: SnakeGameAI) -> float:
-    if game.food == None:
-        return 0
-
-    if direction == Direction.RIGHT:
-        return calc_dist(game.food.x, pt.x, game.w)
-    if direction == Direction.LEFT:
-        return calc_dist(pt.x, game.food.x, game.w)
-    if direction == Direction.UP:
-        return calc_dist(pt.y, game.food.y, game.h)
-    if direction == Direction.DOWN:
-        return calc_dist(game.food.y, pt.y, game.h)
-
-
-def dist_itself(direction: Direction, pt: Point, game: SnakeGameAI) -> int:
-    if direction == Direction.RIGHT:
-        min_dist = 1
-        for p in game.snake:
-            if p.y == pt.y and p != pt: 
-                min_dist = min(min_dist, calc_dist(p.x, pt.x, game.w))
-        return min_dist
-
-    if direction == Direction.LEFT:
-        min_dist = 1
-        for p in game.snake:
-            if p.y == pt.y and p != pt: 
-                min_dist = min(min_dist, calc_dist(pt.x, p.x, game.w))
-        return min_dist
-
-    if direction == Direction.UP:
-        min_dist = 1
-        for p in game.snake:
-            if p.x == pt.x and p != pt: 
-                min_dist = min(min_dist, calc_dist(pt.y, p.y, game.h))
-        return min_dist
-
-    if direction == Direction.DOWN:
-        min_dist = 1
-        for p in game.snake:
-            if p.x == pt.x and p != pt: 
-                min_dist = min(min_dist, calc_dist(p.y, pt.y, game.h))
-        return min_dist
-
-
-def calc_cur_state(cfg: Dict, game: SnakeGameAI) -> np.ndarray:
-    head = game.snake[0]
-    point_l = Point(head.x - BLOCK_SIZE, head.y)
-    point_r = Point(head.x + BLOCK_SIZE, head.y)
-    point_u = Point(head.x, head.y - BLOCK_SIZE)
-    point_d = Point(head.x, head.y + BLOCK_SIZE)
-    
-    dir_l = game.direction == Direction.LEFT
-    dir_r = game.direction == Direction.RIGHT
-    dir_u = game.direction == Direction.UP
-    dir_d = game.direction == Direction.DOWN
-
-    state = [
-        # move direction
-        dir_l,
-        dir_r,
-        dir_u,
-        dir_d,
-
-        # Danger straight
-        (dir_r and game.is_collision(point_r)) or 
-        (dir_l and game.is_collision(point_l)) or 
-        (dir_u and game.is_collision(point_u)) or 
-        (dir_d and game.is_collision(point_d)),
-
-        # Danger right
-        (dir_u and game.is_collision(point_r)) or 
-        (dir_d and game.is_collision(point_l)) or 
-        (dir_l and game.is_collision(point_u)) or 
-        (dir_r and game.is_collision(point_d)),
-
-        # Danger left
-        (dir_d and game.is_collision(point_r)) or 
-        (dir_u and game.is_collision(point_l)) or 
-        (dir_r and game.is_collision(point_u)) or 
-        (dir_l and game.is_collision(point_d)),
-
-        # Food location 
-        game.food.x < game.head.x,  # food left
-        game.food.x > game.head.x,  # food right
-        game.food.y < game.head.y,  # food up
-        game.food.y > game.head.y  # food down        
-    ]
-
-    return np.array(state, dtype=np.float32)
-
+def get_next_state(state: np.ndarray, cfg: Dict, game: SnakeGameAI) -> np.ndarray:
+    screen = get_game_screen(cfg, game)
+    state = np.stack([state[1, :], state[2, :], state[3, :], screen], axis=0)
+    return state
 
 def get_device(device: str):
     return torch.device(device)
