@@ -21,8 +21,8 @@ reward:
   collision: -10
 
 DQN:
-  pretrained: False #'saved_model/model_old_state.pth'
-  DDQN: False
+  pretrained: False #'saved_model/model_DDQN.pth'
+  DDQN: True
   input_size: 11
   output_size: 3
 

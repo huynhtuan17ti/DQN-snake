@@ -1,5 +1,5 @@
 import torch
-from torch.optim import Adam
+from torch.optim import Adam, RMSprop
 from torch import nn
 from typing import Dict
 from utils import get_device
@@ -20,11 +20,11 @@ class Trainer:
         self.target_net.eval()
         
         if cfg['DQN']['pretrained']:
-            self.policy_net.load_state_dict(torch.load(cfg['pretrained']))
+            self.policy_net.load_state_dict(torch.load(cfg['DQN']['pretrained']))
             self.save_target_net()
             print('Load pretrained model!')
 
-        self.optimizer = Adam(self.policy_net.parameters(), lr = self.lr)
+        self.optimizer = RMSprop(self.policy_net.parameters(), lr = self.lr)
         self.criterion = nn.MSELoss()
         self.cfg = cfg
 
@@ -71,4 +71,6 @@ class Trainer:
         self.optimizer.zero_grad()
         loss.backward()
         self.optimizer.step()
+
+        return loss.item()
         

@@ -5,6 +5,7 @@ import torch
 from trainer import Trainer
 from utils import get_device
 from typing import Dict
+import wandb
 
 class Agent:
     def __init__(self, cfg: Dict) -> None:
@@ -13,12 +14,16 @@ class Agent:
         self.memory = deque(maxlen=cfg['max_memory'])
         self.trainer = Trainer(cfg)
         self.device = get_device(cfg['device'])
+        self.total_loss = 0
+        self.n_iters = 0
+        wandb.init(project='dqn-snake')
 
     def save_memory(self, state, action, reward, next_state, done):
         self.memory.append((state, action, reward, next_state, done))
 
     def train_short_memory(self, state, action, reward, next_state, done):
-        self.trainer.train_step((state, action, reward, next_state, done))
+        self.total_loss += self.trainer.train_step((state, action, reward, next_state, done))
+        self.n_iters += 1
 
     def train_long_memory(self):
         if len(self.memory) > self.cfg['batch_size']:
@@ -27,7 +32,10 @@ class Agent:
             mini_batch = self.memory
         
         mini_batch = zip(*mini_batch)
-        self.trainer.train_step(mini_batch)
+        self.total_loss += self.trainer.train_step(mini_batch)
+        self.n_iters += 1
+        wandb.log({'loss': self.total_loss/self.n_iters})
+
 
     def get_action(self, state):
         # using e-greedy
