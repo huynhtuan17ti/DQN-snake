@@ -9,7 +9,7 @@ AI snake game using Deep Q Network
     matplotlib
 ```
 
-## Alogirthm
+## Algoirthm
 Read this [doc](RL_Snake_AI.pdf) to get more understandable.
 
 ## AI gameplay
